@@ -12,6 +12,15 @@ vi.mock('../firebase/auth', () => ({
   onAuthChange: vi.fn(() => () => {}),
 }));
 
+// Recharts' ResponsiveContainer needs ResizeObserver, which jsdom doesn't provide.
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();

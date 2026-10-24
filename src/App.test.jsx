@@ -37,6 +37,11 @@ describe('App auth gate', () => {
     expect(screen.getByRole('heading', { name: 'המדף שלי' })).toBeInTheDocument();
   });
 
+  it('loads the lazy stats screen', async () => {
+    renderWithAuth(<App />, { route: '/stats' });
+    expect(await screen.findByRole('heading', { name: 'סטטיסטיקות' })).toBeInTheDocument();
+  });
+
   it('opens settings from the header icon route', () => {
     renderWithAuth(<App />, { route: '/settings' });
     expect(screen.getByRole('heading', { name: 'הגדרות' })).toBeInTheDocument();
