@@ -15,6 +15,7 @@ const EMPTY_FORM = {
   pages: '',
   coverUrl: null,
   coverData: null,
+  isbn: null,
   summary: '',
 };
 
@@ -31,18 +32,22 @@ export default function NewBook() {
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  // Set when a search result is chosen, so the cover picker looks for its cover.
+  const [autoCover, setAutoCover] = useState(null);
 
   const update = (patch) => setForm((prev) => ({ ...prev, ...patch }));
   const updateHistory = (patch) => setHistory((prev) => ({ ...prev, ...patch }));
 
   function handleSelect(result) {
-    // Genre and summary the user already typed are kept.
+    // Genre and summary the user already typed are kept, and so is a cover they uploaded.
     update({
       title: result.title,
       author: result.author ?? '',
       pages: result.pages ?? '',
       coverUrl: result.thumbnailUrl,
+      isbn: result.isbn ?? null,
     });
+    if (!form.coverData) setAutoCover({ result });
     setErrors({});
   }
 
@@ -75,7 +80,7 @@ export default function NewBook() {
 
       <BookSearch onSelect={handleSelect} />
 
-      <BookForm value={form} onChange={update} errors={errors} />
+      <BookForm value={form} onChange={update} errors={errors} autoCover={autoCover} />
 
       {alreadyRead ? (
         <>

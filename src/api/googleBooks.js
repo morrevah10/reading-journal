@@ -7,6 +7,34 @@ export class GoogleBooksError extends Error {
   }
 }
 
+export const RETRY_DELAY_MS = 600;
+
+function wait(ms, signal) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        reject(signal.reason);
+      },
+      { once: true },
+    );
+  });
+}
+
+// Google Books sometimes answers 503 or drops the connection; such a request is tried once more.
+async function fetchWithRetry(url, { signal, fetchImpl, retryDelayMs }) {
+  try {
+    const response = await fetchImpl(url, { signal });
+    if (response.status !== 503) return response;
+  } catch (err) {
+    if (err?.name === 'AbortError' || signal?.aborted) throw err;
+  }
+  await wait(retryDelayMs, signal);
+  return fetchImpl(url, { signal });
+}
+
 // Searches Google Books and returns normalized results. Queries shorter than 2 chars return [].
 export async function searchBooks(
   query,
@@ -15,6 +43,7 @@ export async function searchBooks(
     fetchImpl = globalThis.fetch,
     apiKey = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY,
     maxResults = 10,
+    retryDelayMs = RETRY_DELAY_MS,
   } = {},
 ) {
   const q = query?.trim() ?? '';
@@ -23,7 +52,7 @@ export async function searchBooks(
   const params = new URLSearchParams({ q, maxResults: String(maxResults), printType: 'books' });
   if (apiKey) params.set('key', apiKey);
 
-  const response = await fetchImpl(`${ENDPOINT}?${params}`, { signal });
+  const response = await fetchWithRetry(`${ENDPOINT}?${params}`, { signal, fetchImpl, retryDelayMs });
   if (!response.ok) throw new GoogleBooksError(response.status);
   const data = await response.json();
   return (data.items ?? []).map(normalizeVolume).filter((book) => book.title);
@@ -33,6 +62,8 @@ export function normalizeVolume(item) {
   const info = item?.volumeInfo ?? {};
   const links = info.imageLinks ?? {};
   return {
+    source: 'google',
+    id: item?.id ? `google:${item.id}` : null,
     googleId: item?.id ?? null,
     title: info.title?.trim() ?? '',
     author: info.authors?.length ? info.authors.join(', ') : null,
