@@ -28,8 +28,31 @@ export function buildTavilyRequest(query, apiKey, { preferDomains = [], country 
   };
 }
 
-// Site graphics that are never book covers.
-const NOT_A_COVER = /(sprite|logo|icon|favicon|avatar|banner|placeholder)/i;
+// Site graphics that are never book covers, recognized by a word in the file path.
+// Short words must match a whole word (so "qr" in an image id doesn't count);
+// longer ones may start a word ("PreloadImage_313", "nav-sprite").
+const NOT_A_COVER_WORDS = ['qr', 'play', 'לוגו'];
+const NOT_A_COVER_PREFIXES = [
+  'sprite', 'logo', 'icon', 'favicon', 'avatar', 'banner', 'placeholder',
+  'loading', 'preload', 'spinner',
+];
+// Animations and vector graphics are never cover photos.
+const NOT_A_COVER_EXTENSIONS = /\.(gif|svg)$/i;
+
+function isSiteGraphic(url) {
+  let path;
+  try {
+    path = decodeURIComponent(new URL(url).pathname).toLowerCase();
+  } catch {
+    return true;
+  }
+  if (NOT_A_COVER_EXTENSIONS.test(path)) return true;
+  const words = path.split(/[^a-z0-9֐-׿]+/).filter(Boolean);
+  return words.some(
+    (word) =>
+      NOT_A_COVER_WORDS.includes(word) || NOT_A_COVER_PREFIXES.some((prefix) => word.startsWith(prefix)),
+  );
+}
 
 // The same image with different tracking parameters (utm_*) counts once.
 function dedupeKey(url) {
@@ -54,7 +77,7 @@ export function normalizeTavilyResponse(data) {
     } catch {
       return;
     }
-    if (seen.has(key) || NOT_A_COVER.test(new URL(url).pathname)) return;
+    if (seen.has(key) || isSiteGraphic(url)) return;
     seen.add(key);
     images.push({
       imageUrl: url,

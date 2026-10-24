@@ -3,6 +3,7 @@ import {
   PICKER_CANDIDATES,
   automaticCoverUrls,
   firstWorkingCover,
+  isCoverShaped,
   pickCandidates,
   pickerView,
 } from './coverPipeline';
@@ -68,6 +69,25 @@ describe('pickCandidates', () => {
       ...list('e', 6),
       ...list('w', 6),
     ]);
+  });
+});
+
+describe('isCoverShaped', () => {
+  it('accepts covers from square to tall', () => {
+    expect(isCoverShaped(300, 450)).toBe(true);
+    expect(isCoverShaped(1000, 1000)).toBe(true);
+    expect(isCoverShaped(128, 180)).toBe(true);
+    expect(isCoverShaped(200, 440)).toBe(true);
+  });
+
+  it('rejects icons, banners, very narrow strips and unknown sizes', () => {
+    expect(isCoverShaped(48, 48)).toBe(false);
+    expect(isCoverShaped(99, 150)).toBe(false);
+    expect(isCoverShaped(1200, 300)).toBe(false);
+    expect(isCoverShaped(400, 300)).toBe(false);
+    expect(isCoverShaped(100, 300)).toBe(false);
+    expect(isCoverShaped(0, 0)).toBe(false);
+    expect(isCoverShaped(undefined, undefined)).toBe(false);
   });
 });
 

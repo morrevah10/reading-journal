@@ -6,14 +6,14 @@ import {
   loadCoverData,
   webCoverCandidates,
 } from '../api/coverSources';
-import { PICKER_CANDIDATES, pickCandidates, pickerView } from '../lib/coverPipeline';
+import { PICKER_CANDIDATES, isCoverShaped, pickCandidates, pickerView } from '../lib/coverPipeline';
 import Dialog from './Dialog';
 
 const NO_LOADS = { loaded: [], failed: [] };
 
 // Step 2 of the cover flow: a picker of up to 6 covers (other editions + web images).
-// Up to 12 candidates are loaded in hidden <img>s; those that fail are dropped and the
-// first 6 that load are shown. Choosing one downloads and compresses it;
+// Up to 12 candidates are loaded in hidden <img>s; those that fail, or that load but are
+// not cover-shaped (icons, banners), are dropped and the first 6 that load are shown. Choosing one downloads and compresses it;
 // `onChoose({ coverData, coverUrl })`. When nothing fits, `onFallback(kind)` hands over to
 // the camera ('camera'), an upload ('upload') or the hint below the cover (no kind).
 export default function CoverChooser({ open, title, author, onChoose, onFallback, onClose }) {
@@ -118,7 +118,10 @@ export default function CoverChooser({ open, title, author, onChoose, onFallback
             src={candidate.previewUrl}
             alt=""
             referrerPolicy="no-referrer"
-            onLoad={() => settle(candidate.key, 'loaded')}
+            onLoad={(event) => {
+              const { naturalWidth, naturalHeight } = event.currentTarget;
+              settle(candidate.key, isCoverShaped(naturalWidth, naturalHeight) ? 'loaded' : 'failed');
+            }}
             onError={() => settle(candidate.key, 'failed')}
           />
         ))}

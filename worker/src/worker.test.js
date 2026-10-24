@@ -277,6 +277,27 @@ describe('/images (Tavily)', () => {
     ]);
   });
 
+  it('skips the loaders, logos, icons and players seen in live results', () => {
+    const junk = [
+      'https://www.keter-books.co.il/Media/PreloadImages/PreloadImage_313_480.gif',
+      'https://www.keter-books.co.il/Media/Uploads/%D7%9C%D7%95%D7%92%D7%95_%D7%9B%D7%AA%D7%A8.jpg',
+      'https://www.steimatzky.co.il/pub/media/loading_image/default/loading.gif',
+      'https://m.media-amazon.com/images/G/01/kindle/app/QR-store-link-kindle-app._CB626291935_.png',
+      'https://m.media-amazon.com/images/S/sash//pLB3SkYb3bHZzHQ.svg',
+      'https://m.media-amazon.com/images/G/01/samplePlayers/assets/Spinner._CB575170765_.svg',
+      'https://m.media-amazon.com/images/G/01/Audible/Homestead/samplePlayer/Play._CB655354636_.png',
+    ];
+    const covers = [
+      'https://www.keter-books.co.il/Media/Uploads/sippuralll(2).jpg',
+      'https://m.media-amazon.com/images/I/81Ua99CURsL._AC_UF1000,1000_QL80_.jpg',
+      // "qr" and "play" inside other words or ids are fine.
+      'https://shop.example/images/aQr3Xplay/cover.webp',
+      'https://images.penguinrandomhouse.com/cover/9780593640333',
+    ];
+    const images = normalizeTavilyResponse({ images: [...junk, ...covers] });
+    expect(images.map((i) => i.imageUrl)).toEqual(covers);
+  });
+
   it('collects https images from the top-level list and the results, without duplicates', () => {
     const images = normalizeTavilyResponse(tavily);
     expect(images.map((i) => i.imageUrl)).toEqual([

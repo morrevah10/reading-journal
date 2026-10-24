@@ -37,13 +37,21 @@ const webCandidate = (i) => ({
   sig: `sig-${i}`,
 });
 
-// jsdom does not load images; this fires load (or error) on the picker's hidden images.
-async function settleImages({ fail = () => false } = {}) {
+// jsdom does not load images; this gives an image a size and fires its load event.
+function loadImage(img, width = 300, height = 450) {
+  Object.defineProperty(img, 'naturalWidth', { value: width, configurable: true });
+  Object.defineProperty(img, 'naturalHeight', { value: height, configurable: true });
+  fireEvent.load(img);
+}
+
+// Fires load (or error) on the picker's hidden images; `size(src)` gives [width, height].
+async function settleImages({ fail = () => false, size = () => [300, 450] } = {}) {
   const preload = await screen.findByTestId('cover-preload');
   await vi.waitFor(() => expect(preload.querySelector('img')).not.toBeNull());
   for (const img of [...preload.querySelectorAll('img')]) {
-    if (fail(img.getAttribute('src'))) fireEvent.error(img);
-    else fireEvent.load(img);
+    const src = img.getAttribute('src');
+    if (fail(src)) fireEvent.error(img);
+    else loadImage(img, ...size(src));
   }
 }
 
@@ -183,8 +191,8 @@ describe('CoverChooser (step 2)', () => {
     expect(pending.filter((img) => img.src.includes('shop.example'))).toHaveLength(6);
 
     // A web image that loads first is shown first.
-    fireEvent.load(pending.find((img) => img.src === 'https://shop.example/1.jpg'));
-    for (const img of pending.filter((i) => i.src !== 'https://shop.example/1.jpg')) fireEvent.load(img);
+    loadImage(pending.find((img) => img.src === 'https://shop.example/1.jpg'));
+    for (const img of pending.filter((i) => i.src !== 'https://shop.example/1.jpg')) loadImage(img);
     const images = within(dialog).getAllByRole('img');
     expect(images).toHaveLength(6);
     expect(images[0]).toHaveAttribute('src', 'https://shop.example/1.jpg');
@@ -203,6 +211,21 @@ describe('CoverChooser (step 2)', () => {
     const shown = within(dialog).getAllByRole('img').map((img) => img.getAttribute('src'));
     expect(shown).toEqual([olCandidate(1).previewUrl, 'https://shop.example/2.jpg']);
     expect(screen.getByTestId('cover-preload').querySelectorAll('img')).toHaveLength(0);
+  });
+
+  it('hides images that load but are not cover-shaped', async () => {
+    bridge.configured = true;
+    webCoverCandidates.mockResolvedValue([1, 2, 3].map(webCandidate));
+    render(<CoverPicker title="Dune" onChange={vi.fn()} />);
+    const dialog = await openChooser();
+    const sizes = {
+      'https://shop.example/1.jpg': [48, 48], // an icon
+      'https://shop.example/2.jpg': [1200, 300], // a banner
+      'https://shop.example/3.jpg': [1000, 1000], // a store image padded to a square
+    };
+    await settleImages({ size: (src) => sizes[src] ?? [300, 450] });
+    const shown = within(dialog).getAllByRole('img').map((img) => img.getAttribute('src'));
+    expect(shown).toEqual([olCandidate(1).previewUrl, olCandidate(2).previewUrl, 'https://shop.example/3.jpg']);
   });
 
   it('shows an error and stays open when a chosen cover fails', async () => {

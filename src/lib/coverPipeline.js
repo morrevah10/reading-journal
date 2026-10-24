@@ -8,6 +8,19 @@
 export const PICKER_MAX = 6;
 export const PICKER_CANDIDATES = 12;
 
+// A loaded image counts as a cover only if it is big enough and roughly cover-shaped:
+// from square (store images padded to 1000×1000) to tall; wide banners and tiny icons are not.
+export const COVER_MIN_WIDTH = 100;
+export const COVER_MIN_HEIGHT = 120;
+export const COVER_MIN_RATIO = 0.9; // height / width
+export const COVER_MAX_RATIO = 2.2;
+
+export function isCoverShaped(width, height) {
+  if (!(width >= COVER_MIN_WIDTH && height >= COVER_MIN_HEIGHT)) return false;
+  const ratio = height / width;
+  return ratio >= COVER_MIN_RATIO && ratio <= COVER_MAX_RATIO;
+}
+
 // The picker's view of its candidates: the first `max` images that finished loading,
 // in the order they loaded. `loaded` lists keys in load order, `failed` the keys that failed.
 export function pickerView(candidates, { loaded, failed }, max = PICKER_MAX) {
