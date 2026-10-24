@@ -153,6 +153,13 @@ button {
   color: var(--color-error);
 }
 
+/* Technical error code (e.g. auth/popup-blocked), shown for diagnosis */
+.error-code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+}
+
 /* Buttons */
 .btn {
   min-height: 44px;
