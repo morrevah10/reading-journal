@@ -1,14 +1,15 @@
 import {
-  addDoc,
   collection,
   doc,
   getDocs,
   onSnapshot,
   serverTimestamp,
+  setDoc,
   updateDoc,
   writeBatch,
 } from 'firebase/firestore';
 import { db } from './config';
+import { localWrite } from './localWrite';
 
 // Firestore allows up to 500 writes per batch.
 const BATCH_LIMIT = 500;
@@ -38,20 +39,22 @@ export function subscribeBook(uid, bookId, onData, onError) {
   );
 }
 
+// Writes resolve once they are in the local cache (see localWrite), so they also work offline.
+// The id of a new book is generated locally.
 export async function addBook(uid, book) {
-  const ref = await addDoc(booksCollection(uid), {
-    ...book,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
+  const ref = doc(booksCollection(uid));
+  localWrite(
+    setDoc(ref, { ...book, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }),
+  );
   return ref.id;
 }
 
-export function updateBook(uid, bookId, patch) {
-  return updateDoc(bookDoc(uid, bookId), { ...patch, updatedAt: serverTimestamp() });
+export async function updateBook(uid, bookId, patch) {
+  localWrite(updateDoc(bookDoc(uid, bookId), { ...patch, updatedAt: serverTimestamp() }));
 }
 
 // Deletes the book together with all of its notes and quotes.
+// Offline, getDocs answers from the local cache.
 export async function deleteBook(uid, bookId) {
   const book = bookDoc(uid, bookId);
   const snapshots = await Promise.all(
@@ -63,7 +66,7 @@ export async function deleteBook(uid, bookId) {
   for (let i = 0; i < refs.length; i += BATCH_LIMIT) {
     const batch = writeBatch(db);
     refs.slice(i, i + BATCH_LIMIT).forEach((ref) => batch.delete(ref));
-    await batch.commit();
+    localWrite(batch.commit());
   }
 }
 

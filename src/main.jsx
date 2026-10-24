@@ -7,6 +7,8 @@ import '@fontsource/heebo/700.css';
 import './styles/global.css';
 import { AuthProvider } from './hooks/useAuth';
 import App from './App';
+import OfflineBanner from './components/OfflineBanner';
+import UpdatePrompt from './components/UpdatePrompt';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -15,5 +17,9 @@ createRoot(document.getElementById('root')).render(
         <App />
       </AuthProvider>
     </HashRouter>
+    <div className="app-notices">
+      <OfflineBanner />
+      <UpdatePrompt />
+    </div>
   </StrictMode>,
 );

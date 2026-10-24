@@ -58,3 +58,5 @@ Notes and quotes are unlimited; the book page scrolls. Goals are always editable
 - `npm test` — run all tests
 - `npm run test:rules` — security rules tests against the Firebase Emulator
 - `npm run build` — production build
+- `npm run preview` — serve the build locally (the service worker only runs here, not in `npm run dev`)
+- `npm run generate-icons` — regenerate the PNG icons and favicon in `public/` from `public/icon.svg`
