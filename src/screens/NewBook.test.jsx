@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { renderWithAuth, testUser } from '../test/renderWithAuth';
@@ -97,6 +97,92 @@ describe('NewBook', () => {
       testUser.uid,
       expect.objectContaining({ title: 'Later', status: 'want', startDate: null }),
     );
+  });
+
+  it('"כבר קראתי" opens the history fields with an empty end date', async () => {
+    renderNewBook();
+    expect(screen.queryByText('פרטי הקריאה')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'כבר קראתי' }));
+    const group = screen.getByRole('group', { name: 'פרטי הקריאה' });
+    expect(within(group).getByLabelText('תאריך סיום *')).toHaveValue('');
+    expect(within(group).getByLabelText('תאריך התחלה (לא חובה)')).toHaveValue('');
+    // The "start now" date and the other save buttons are hidden while it is open.
+    expect(screen.queryByLabelText('תאריך התחלה (אם מתחיל עכשיו)')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'מתחיל עכשיו' })).not.toBeInTheDocument();
+  });
+
+  it('"כבר קראתי" requires an end date', async () => {
+    renderNewBook();
+    await userEvent.type(screen.getByRole('textbox', { name: /שם הספר/ }), 'Old');
+    await userEvent.click(screen.getByRole('button', { name: 'כבר קראתי' }));
+    await userEvent.click(screen.getByRole('button', { name: 'שמירה' }));
+    expect(screen.getByText('תאריך סיום הוא שדה חובה')).toBeInTheDocument();
+    expect(addBook).not.toHaveBeenCalled();
+  });
+
+  it('"כבר קראתי" saves a finished book with dates, rating and review', async () => {
+    renderNewBook();
+    await userEvent.type(screen.getByRole('textbox', { name: /שם הספר/ }), 'Old');
+    await userEvent.click(screen.getByRole('button', { name: 'כבר קראתי' }));
+    await userEvent.type(screen.getByLabelText('תאריך התחלה (לא חובה)'), '2024-01-10');
+    await userEvent.type(screen.getByLabelText('תאריך סיום *'), '2024-02-01');
+    await userEvent.click(screen.getByRole('button', { name: '4 כוכבים' }));
+    await userEvent.type(screen.getByRole('textbox', { name: 'ביקורת קצרה' }), 'Good');
+    await userEvent.click(screen.getByRole('button', { name: 'שמירה' }));
+
+    expect(addBook).toHaveBeenCalledWith(
+      testUser.uid,
+      expect.objectContaining({
+        title: 'Old',
+        status: 'finished',
+        startDate: '2024-01-10',
+        endDate: '2024-02-01',
+        rating: 4,
+        review: 'Good',
+      }),
+    );
+    expect(await screen.findByText('book-page')).toBeInTheDocument();
+  });
+
+  it('"כבר קראתי" saves without a start date', async () => {
+    renderNewBook();
+    await userEvent.type(screen.getByRole('textbox', { name: /שם הספר/ }), 'Old');
+    await userEvent.click(screen.getByRole('button', { name: 'כבר קראתי' }));
+    await userEvent.type(screen.getByLabelText('תאריך סיום *'), '2024-02-01');
+    await userEvent.click(screen.getByRole('button', { name: 'שמירה' }));
+    expect(addBook).toHaveBeenCalledWith(
+      testUser.uid,
+      expect.objectContaining({ status: 'finished', startDate: null, endDate: '2024-02-01', rating: null }),
+    );
+  });
+
+  it('"כבר קראתי" blocks a future end date', async () => {
+    renderNewBook();
+    await userEvent.type(screen.getByRole('textbox', { name: /שם הספר/ }), 'Old');
+    await userEvent.click(screen.getByRole('button', { name: 'כבר קראתי' }));
+    await userEvent.type(screen.getByLabelText('תאריך סיום *'), '2099-01-01');
+    await userEvent.click(screen.getByRole('button', { name: 'שמירה' }));
+    expect(screen.getByText('התאריך לא יכול להיות בעתיד')).toBeInTheDocument();
+    expect(addBook).not.toHaveBeenCalled();
+  });
+
+  it('cancelling "כבר קראתי" brings back the other save buttons', async () => {
+    renderNewBook();
+    await userEvent.click(screen.getByRole('button', { name: 'כבר קראתי' }));
+    await userEvent.click(screen.getByRole('button', { name: 'ביטול' }));
+    expect(screen.getByRole('button', { name: 'מתחיל עכשיו' })).toBeInTheDocument();
+    expect(screen.queryByText('פרטי הקריאה')).not.toBeInTheDocument();
+  });
+
+  it('"מתחיל עכשיו" blocks a future start date', async () => {
+    renderNewBook();
+    await userEvent.type(screen.getByRole('textbox', { name: /שם הספר/ }), 'X');
+    const startInput = screen.getByLabelText('תאריך התחלה (אם מתחיל עכשיו)');
+    await userEvent.clear(startInput);
+    await userEvent.type(startInput, '2099-01-01');
+    await userEvent.click(screen.getByRole('button', { name: 'מתחיל עכשיו' }));
+    expect(screen.getByText('התאריך לא יכול להיות בעתיד')).toBeInTheDocument();
+    expect(addBook).not.toHaveBeenCalled();
   });
 
   it('shows an error when saving fails', async () => {

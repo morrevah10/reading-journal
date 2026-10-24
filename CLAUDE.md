@@ -9,14 +9,14 @@ The full functional spec is in `SPEC.md`. Read it before doing anything.
 ## Working rules (non-negotiable)
 
 1. **Never write code before Mor approves the plan.** For every stage and every non-trivial change: describe what will be built, which files are created or changed, and what the tests will cover. Wait for an explicit "approved" before writing any code.
-2. **Work stage by stage** as defined in SPEC.md (stages 1–7). Do not start a stage before the previous one is tested on the phone and approved by Mor.
+2. **Work stage by stage** as defined in SPEC.md (stages 1–7). Do not start a stage before the previous one is tested and approved by Mor. Stages 1–5 are tested on the desktop (localhost, `npm run dev`); from stage 6 on, Mor also tests on the phone via GitHub Pages.
 3. **Every stage includes tests.** Unit tests for calculations and status transitions, component tests for screens. Use Vitest + React Testing Library. A stage is not done until `npm test` passes.
 4. **Security tests exist once, in stage 1 only**: one small file testing Firestore rules with the Firebase Emulator (unauthenticated users are blocked; a signed-in user can read and write only under their own `users/{uid}`). Extend it only when a new collection is added.
 5. **Never deploy without Mor's explicit approval.** Deployment to GitHub Pages is a manually triggered workflow. Never run it, never trigger it, never push to `main` unless Mor says so.
 6. **Never commit secrets.** Firebase config and the Google Books API key live in `.env.local` (gitignored). Use `VITE_` prefixed variables.
 7. **Code comments in English only.** Never write comments in Hebrew. UI strings are in Hebrew.
 8. **Keep the code modular** — the project may grow in other directions later. Separate data access, business logic (calculations, status transitions) and UI components.
-9. At the end of each stage, summarize what was built and what Mor should check on the phone. Mor runs `npm run dev`, tests on the phone and approves. Only then commit.
+9. At the end of each stage, summarize what was built and what Mor should check. Until stage 6: Mor runs `npm run dev` and tests on the desktop (localhost). From stage 6: Mor also tests on the phone via the GitHub Pages deployment. Mor approves; only then commit.
 
 ## Stack
 

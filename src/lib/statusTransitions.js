@@ -25,6 +25,8 @@ export const ACTIONS = {
 
 export class TransitionError extends Error {}
 
+export const FUTURE_DATE_MESSAGE = 'התאריך לא יכול להיות בעתיד';
+
 export function availableActions(status) {
   return Object.keys(ACTIONS).filter((action) => ACTIONS[action].from === status);
 }
@@ -40,6 +42,7 @@ export function applyTransition(book, action, options = {}) {
 
   const { today = todayISO(), date } = options;
   const when = date || today;
+  if (when > today) throw new TransitionError(FUTURE_DATE_MESSAGE);
 
   switch (action) {
     case 'start':

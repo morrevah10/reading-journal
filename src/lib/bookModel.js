@@ -1,10 +1,18 @@
 import { todayISO } from './dates';
-import { STATUS, isValidRating } from './statusTransitions';
+import { FUTURE_DATE_MESSAGE, STATUS, isValidRating } from './statusTransitions';
 
 // How a new book is saved from the New Book screen.
 export const SAVE_MODES = {
   START: 'start',
   WANT: 'want',
+  // "כבר קראתי": a book read in the past goes straight to finished.
+  FINISHED: 'finished',
+};
+
+const MODE_STATUS = {
+  [SAVE_MODES.START]: STATUS.READING,
+  [SAVE_MODES.WANT]: STATUS.WANT,
+  [SAVE_MODES.FINISHED]: STATUS.FINISHED,
 };
 
 const TEXT_FIELDS = ['title', 'author', 'genre', 'summary', 'review', 'abandonReason'];
@@ -23,7 +31,12 @@ export function normalizeBookInput(input) {
 }
 
 export function createBook(input, mode, today = todayISO()) {
-  const reading = mode === SAVE_MODES.START;
+  const status = MODE_STATUS[mode] ?? STATUS.WANT;
+  const finished = status === STATUS.FINISHED;
+  let startDate = null;
+  if (status === STATUS.READING) startDate = input.startDate || today;
+  if (finished) startDate = input.startDate || null;
+
   return {
     title: '',
     author: null,
@@ -33,19 +46,21 @@ export function createBook(input, mode, today = todayISO()) {
     coverData: null,
     summary: null,
     ...normalizeBookInput(input),
-    status: reading ? STATUS.READING : STATUS.WANT,
-    startDate: reading ? input.startDate || today : null,
-    endDate: null,
-    rating: null,
-    review: null,
+    status,
+    startDate,
+    endDate: finished ? input.endDate || null : null,
+    rating: finished ? (input.rating ?? null) : null,
+    review: finished ? cleanText(input.review) : null,
     abandonReason: null,
     tags: [],
   };
 }
 
 // Returns a map of field → Hebrew error message. Empty object means valid.
-export function validateBook(book) {
+export function validateBook(book, today = todayISO()) {
   const errors = {};
+  if (book.startDate && book.startDate > today) errors.startDate = FUTURE_DATE_MESSAGE;
+  if (book.endDate && book.endDate > today) errors.endDate = FUTURE_DATE_MESSAGE;
   if (!book.title || !book.title.trim()) {
     errors.title = 'שם הספר הוא שדה חובה';
   }

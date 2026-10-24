@@ -31,6 +31,19 @@ export function shelfBooks(books, filters = DEFAULT_SHELF_FILTERS) {
     .sort((a, b) => compareDesc(a.endDate, b.endDate));
 }
 
+// The want-to-read list, most recently added first. A book whose server timestamp
+// hasn't arrived yet was just added, so it goes first.
+export function wantToReadBooks(books) {
+  return books
+    .filter((book) => book.status === STATUS.WANT)
+    .sort((a, b) => {
+      const timeA = toMillis(a.createdAt) ?? Infinity;
+      const timeB = toMillis(b.createdAt) ?? Infinity;
+      if (timeA === timeB) return 0;
+      return timeA < timeB ? 1 : -1;
+    });
+}
+
 export function shelfYears(books) {
   const years = new Set(
     books.filter((book) => matchesStatus(book, SHELF_STATUS.ALL)).map(yearOf).filter(Boolean),
@@ -58,6 +71,14 @@ function matchesStatus(book, status) {
 
 function yearOf(book) {
   return book.endDate ? book.endDate.slice(0, 4) : null;
+}
+
+// Accepts a Firestore Timestamp, a Date or ms; null when missing.
+function toMillis(value) {
+  if (value === null || value === undefined) return null;
+  if (typeof value.toMillis === 'function') return value.toMillis();
+  if (value instanceof Date) return value.getTime();
+  return typeof value === 'number' ? value : null;
 }
 
 // Descending by ISO date string; missing dates go last.
