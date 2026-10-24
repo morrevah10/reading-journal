@@ -7,6 +7,9 @@ import Shelf from './Shelf';
 
 const fixtures = vi.hoisted(() => ({ books: [] }));
 
+// Keeps the real Firebase app from initializing (CI has no .env.local).
+vi.mock('../firebase/config', () => ({ app: {}, auth: {}, db: {} }));
+
 vi.mock('../firebase/books', () => ({
   subscribeBooks: vi.fn((uid, onData) => {
     onData(fixtures.books);
