@@ -48,7 +48,7 @@ firestore.rules
 - `users/{uid}/books/{bookId}` — title, author, genre, pages, coverUrl, coverData, status (want | reading | finished | abandoned), startDate, endDate, summary, rating, review, abandonReason, tags, createdAt, updatedAt
 - `users/{uid}/books/{bookId}/notes/{noteId}` — text, createdAt
 - `users/{uid}/books/{bookId}/quotes/{quoteId}` — text, page, createdAt
-- `users/{uid}/goals/{goalId}` — name, type (books | pages | genre), target, genre, period (monthly | yearly | custom), startDate, endDate, recurring
+- `users/{uid}/goals/{goalId}` — name, type (books | pages | genre), target, genre, period (monthly | yearly | custom), startDate, endDate, recurring, seriesId. Each period of a recurring goal is its own document with id `{seriesId}__{periodKey}`.
 
 Notes and quotes are unlimited; the book page scrolls. Goals are always editable.
 
