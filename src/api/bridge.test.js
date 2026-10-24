@@ -19,6 +19,14 @@ const BASE = 'https://bridge.test';
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 
+// A downloaded file. Not a real Response: under jsdom, `new Response(new Blob(...))` fails on
+// some Node versions (jsdom's Blob has no stream()), and downloadCover only needs blob().type.
+const fileResponse = (type, status = 200) => ({
+  ok: status >= 200 && status < 300,
+  status,
+  blob: async () => ({ type, size: 1 }),
+});
+
 afterEach(() => {
   vi.unstubAllEnvs();
 });
@@ -117,8 +125,7 @@ describe('cover sources', () => {
 
   it('downloads Open Library directly and other covers through the Worker', async () => {
     vi.stubEnv('VITE_BRIDGE_URL', BASE);
-    const image = () => new Response(new Blob(['x'], { type: 'image/jpeg' }), { headers: { 'Content-Type': 'image/jpeg' } });
-    const fetchImpl = vi.fn(async () => image());
+    const fetchImpl = vi.fn(async () => fileResponse('image/jpeg'));
 
     await downloadCover('https://covers.openlibrary.org/b/id/1-L.jpg', { fetchImpl });
     expect(fetchImpl.mock.calls[0][0]).toBe('https://covers.openlibrary.org/b/id/1-L.jpg');
@@ -129,7 +136,7 @@ describe('cover sources', () => {
   });
 
   it('rejects downloads that are not images', async () => {
-    const fetchImpl = vi.fn(async () => new Response('<html>', { headers: { 'Content-Type': 'text/html' } }));
+    const fetchImpl = vi.fn(async () => fileResponse('text/html'));
     await expect(downloadCover('https://covers.openlibrary.org/b/id/1-L.jpg', { fetchImpl })).rejects.toThrow();
   });
 
@@ -173,7 +180,7 @@ describe('cover sources', () => {
 
   it('passes the signature to /cover', async () => {
     vi.stubEnv('VITE_BRIDGE_URL', BASE);
-    const fetchImpl = vi.fn(async () => new Response(new Blob(['x'], { type: 'image/png' }), { headers: { 'Content-Type': 'image/png' } }));
+    const fetchImpl = vi.fn(async () => fileResponse('image/png'));
     await downloadCover('https://shop.example/1.jpg', { sig: 'abc', fetchImpl });
     const url = new URL(fetchImpl.mock.calls[0][0]);
     expect(url.pathname).toBe('/cover');
