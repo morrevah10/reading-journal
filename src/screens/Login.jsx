@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { signInWithGoogle } from '../firebase/auth';
+import { authErrorCode } from '../lib/authErrors';
 
 export default function Login() {
-  const [error, setError] = useState('');
+  // The Firebase error code of the last failed sign-in, or null.
+  const [errorCode, setErrorCode] = useState(null);
   const [busy, setBusy] = useState(false);
 
   async function handleSignIn() {
-    setError('');
+    setErrorCode(null);
     setBusy(true);
     try {
       await signInWithGoogle();
-    } catch {
-      setError('הכניסה נכשלה. נסה שוב.');
+    } catch (error) {
+      console.error('Sign-in failed', error);
+      setErrorCode(authErrorCode(error));
     } finally {
       setBusy(false);
     }
@@ -24,7 +27,14 @@ export default function Login() {
       <button type="button" className="btn btn-primary" onClick={handleSignIn} disabled={busy}>
         כניסה עם Google
       </button>
-      {error && <p className="error-text" role="alert">{error}</p>}
+      {errorCode && (
+        <p className="error-text" role="alert">
+          הכניסה נכשלה. נסה שוב.{' '}
+          <bdi className="error-code" dir="ltr">
+            ({errorCode})
+          </bdi>
+        </p>
+      )}
     </div>
   );
 }
