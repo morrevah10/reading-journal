@@ -9,6 +9,17 @@ vi.mock('./firebase/auth', () => ({
   onAuthChange: vi.fn(() => () => {}),
 }));
 
+vi.mock('./firebase/books', () => ({
+  subscribeBooks: vi.fn((uid, onData) => {
+    onData([]);
+    return () => {};
+  }),
+}));
+
+vi.mock('./firebase/entries', () => ({
+  ENTRY_KINDS: { NOTES: 'notes', QUOTES: 'quotes' },
+}));
+
 describe('App auth gate', () => {
   it('shows a loading state while auth is resolving', () => {
     renderWithAuth(<App />, { user: null, loading: true });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate, toDate } from './dates';
+import { daysBetween, formatDate, toDate, toISODate, todayISO } from './dates';
 
 describe('formatDate', () => {
   it('formats a Date as dd/MM/yyyy', () => {
@@ -31,5 +31,28 @@ describe('formatDate', () => {
 describe('toDate', () => {
   it('returns null for invalid input', () => {
     expect(toDate('garbage')).toBeNull();
+  });
+});
+
+describe('toISODate / todayISO', () => {
+  it('formats a local date as yyyy-MM-dd', () => {
+    expect(toISODate(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05');
+    expect(todayISO(new Date(2026, 9, 24, 0, 1))).toBe('2026-10-24');
+  });
+
+  it('returns null for invalid input', () => {
+    expect(toISODate(null)).toBeNull();
+  });
+});
+
+describe('daysBetween', () => {
+  it('counts calendar days', () => {
+    expect(daysBetween('2026-10-01', '2026-10-24')).toBe(23);
+    expect(daysBetween('2026-10-24', '2026-10-24')).toBe(0);
+    expect(daysBetween('2026-10-24', '2026-10-01')).toBe(-23);
+  });
+
+  it('handles leap years', () => {
+    expect(daysBetween('2028-02-28', '2028-03-01')).toBe(2);
   });
 });

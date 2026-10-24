@@ -7,6 +7,9 @@ import WantToRead from './screens/WantToRead';
 import Goals from './screens/Goals';
 import Stats from './screens/Stats';
 import Settings from './screens/Settings';
+import NewBook from './screens/NewBook';
+import BookPage from './screens/BookPage';
+import EditBook from './screens/EditBook';
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -29,6 +32,9 @@ export default function App() {
         <Route path="goals" element={<Goals />} />
         <Route path="stats" element={<Stats />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="new" element={<NewBook />} />
+        <Route path="book/:id" element={<BookPage />} />
+        <Route path="book/:id/edit" element={<EditBook />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

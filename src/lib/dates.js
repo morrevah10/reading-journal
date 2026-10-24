@@ -22,3 +22,24 @@ export function toDate(value) {
   }
   return Number.isNaN(date.getTime()) ? null : date;
 }
+
+// Book dates are stored as local date-only strings: "yyyy-MM-dd".
+export function toISODate(value) {
+  const date = toDate(value);
+  if (!date) return null;
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+export function todayISO(now = new Date()) {
+  return toISODate(now);
+}
+
+// Calendar days from `from` to `to` (both "yyyy-MM-dd"); negative if `to` is earlier.
+// Computed in UTC so daylight saving changes never shift the result.
+export function daysBetween(from, to) {
+  const [y1, m1, d1] = from.split('-').map(Number);
+  const [y2, m2, d2] = to.split('-').map(Number);
+  return Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / 86400000);
+}
