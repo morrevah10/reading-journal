@@ -14,6 +14,7 @@ export function FinishDialog({ open, initialReview, onConfirm, onCancel, error }
         <span className="field-label">תאריך סיום</span>
         <input
           type="date"
+          max={todayISO()}
           value={form.date}
           onChange={(event) => setForm({ ...form, date: event.target.value })}
         />
@@ -61,6 +62,7 @@ export function AbandonDialog({ open, onConfirm, onCancel, error }) {
         <span className="field-label">תאריך</span>
         <input
           type="date"
+          max={todayISO()}
           value={form.date}
           onChange={(event) => setForm({ ...form, date: event.target.value })}
         />

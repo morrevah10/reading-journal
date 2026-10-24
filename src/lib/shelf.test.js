@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { matchesQuery, readingBooks, shelfBooks, shelfGenres, shelfYears } from './shelf';
+import {
+  matchesQuery,
+  readingBooks,
+  shelfBooks,
+  shelfGenres,
+  shelfYears,
+  wantToReadBooks,
+} from './shelf';
 
 const books = [
   { id: 'r1', status: 'reading', title: 'Reading Old', startDate: '2026-09-01' },
@@ -55,6 +62,32 @@ describe('shelfBooks', () => {
     expect(ids(shelfBooks(books, { status: 'all', genre: 'מדע בדיוני', year: '2026' }))).toEqual([
       'f3',
     ]);
+  });
+});
+
+describe('wantToReadBooks', () => {
+  const ts = (ms) => ({ toMillis: () => ms });
+
+  it('returns only want books, most recently added first', () => {
+    const list = [
+      { id: 'w-old', status: 'want', createdAt: ts(1000) },
+      { id: 'r', status: 'reading', createdAt: ts(5000) },
+      { id: 'w-new', status: 'want', createdAt: ts(3000) },
+      { id: 'w-mid', status: 'want', createdAt: new Date(2000) },
+    ];
+    expect(ids(wantToReadBooks(list))).toEqual(['w-new', 'w-mid', 'w-old']);
+  });
+
+  it('puts a just-added book without a timestamp first', () => {
+    const list = [
+      { id: 'w1', status: 'want', createdAt: ts(1000) },
+      { id: 'pending', status: 'want', createdAt: null },
+    ];
+    expect(ids(wantToReadBooks(list))).toEqual(['pending', 'w1']);
+  });
+
+  it('returns [] when there are no want books', () => {
+    expect(wantToReadBooks(books.filter((b) => b.status !== 'want'))).toEqual([]);
   });
 });
 

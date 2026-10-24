@@ -92,6 +92,16 @@ describe('BookPage header and dates', () => {
   });
 });
 
+describe('BookPage history book', () => {
+  it('a finished book without a start date shows only the end date, no reading days', () => {
+    fixtures.book = { ...baseBook, status: 'finished', startDate: null, endDate: '2024-02-01' };
+    renderPage();
+    expect(screen.getByText('01/02/2024')).toBeInTheDocument();
+    expect(screen.queryByText('התחלה')).not.toBeInTheDocument();
+    expect(screen.queryByText('ימי קריאה')).not.toBeInTheDocument();
+  });
+});
+
 describe('BookPage status actions', () => {
   it.each([
     ['reading', ['סיימתי', 'נטשתי']],
@@ -144,6 +154,18 @@ describe('BookPage status actions', () => {
     await userEvent.type(dateInput, '2026-09-01');
     await userEvent.click(within(dialog).getByRole('button', { name: 'שמירה' }));
     expect(within(dialog).getByRole('alert')).toHaveTextContent('תאריך הסיום');
+    expect(updateBook).not.toHaveBeenCalled();
+  });
+
+  it('blocks a future end date in the finish dialog', async () => {
+    renderPage();
+    await userEvent.click(screen.getByRole('button', { name: 'סיימתי' }));
+    const dialog = screen.getByRole('dialog');
+    const dateInput = dialog.querySelector('input[type="date"]');
+    await userEvent.clear(dateInput);
+    await userEvent.type(dateInput, '2099-01-01');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'שמירה' }));
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('התאריך לא יכול להיות בעתיד');
     expect(updateBook).not.toHaveBeenCalled();
   });
 

@@ -51,6 +51,90 @@ describe('createBook', () => {
   });
 });
 
+describe('createBook — already read (history)', () => {
+  const input = {
+    title: 'Old Book',
+    startDate: '2024-01-10',
+    endDate: '2024-02-01',
+    rating: 4,
+    review: '  worth it ',
+  };
+
+  it('creates a finished book with dates, rating and review', () => {
+    expect(createBook(input, SAVE_MODES.FINISHED, TODAY)).toMatchObject({
+      title: 'Old Book',
+      status: 'finished',
+      startDate: '2024-01-10',
+      endDate: '2024-02-01',
+      rating: 4,
+      review: 'worth it',
+      abandonReason: null,
+    });
+  });
+
+  it('leaves the start date null when not given (never defaults to today)', () => {
+    const book = createBook({ ...input, startDate: '' }, SAVE_MODES.FINISHED, TODAY);
+    expect(book.startDate).toBeNull();
+    expect(validateBook(book, TODAY)).toEqual({});
+  });
+
+  it('allows no rating and no review', () => {
+    const book = createBook(
+      { title: 'X', endDate: '2024-02-01', rating: null, review: '' },
+      SAVE_MODES.FINISHED,
+      TODAY,
+    );
+    expect(book).toMatchObject({ rating: null, review: null });
+    expect(validateBook(book, TODAY)).toEqual({});
+  });
+
+  it('requires an end date', () => {
+    const book = createBook({ title: 'X', endDate: '' }, SAVE_MODES.FINISHED, TODAY);
+    expect(book.endDate).toBeNull();
+    expect(validateBook(book, TODAY)).toHaveProperty('endDate');
+  });
+
+  it('rejects an end date before the start date', () => {
+    const book = createBook(
+      { ...input, startDate: '2024-03-01', endDate: '2024-02-01' },
+      SAVE_MODES.FINISHED,
+      TODAY,
+    );
+    expect(validateBook(book, TODAY)).toHaveProperty('endDate');
+  });
+
+  it('ignores rating and review in the other modes', () => {
+    expect(createBook(input, SAVE_MODES.START, TODAY)).toMatchObject({
+      status: 'reading',
+      endDate: null,
+      rating: null,
+      review: null,
+    });
+  });
+});
+
+describe('validateBook — future dates', () => {
+  it('rejects a future end date', () => {
+    expect(
+      validateBook(
+        { title: 'X', status: 'finished', startDate: TODAY, endDate: '2026-10-25' },
+        TODAY,
+      ),
+    ).toEqual({ endDate: 'התאריך לא יכול להיות בעתיד' });
+  });
+
+  it('rejects a future start date', () => {
+    expect(validateBook({ title: 'X', status: 'reading', startDate: '2026-11-01' }, TODAY))
+      .toHaveProperty('startDate', 'התאריך לא יכול להיות בעתיד');
+  });
+
+  it('accepts today', () => {
+    expect(
+      validateBook({ title: 'X', status: 'finished', startDate: TODAY, endDate: TODAY }, TODAY),
+    ).toEqual({});
+  });
+});
+
 describe('validateBook', () => {
   const valid = { title: 'Dune', status: 'reading', startDate: TODAY, rating: null };
 

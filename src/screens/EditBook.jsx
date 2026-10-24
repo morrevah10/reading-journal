@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useBook } from '../hooks/useBooks';
 import { updateBook } from '../firebase/books';
 import { normalizeBookInput, validateBook } from '../lib/bookModel';
+import { todayISO } from '../lib/dates';
 import { STATUS } from '../lib/statusTransitions';
 import BookForm from '../components/BookForm';
 import StarRating from '../components/StarRating';
@@ -72,6 +73,7 @@ function EditBookForm({ book }) {
           <span className="field-label">תאריך התחלה</span>
           <input
             type="date"
+            max={todayISO()}
             value={form.startDate}
             onChange={(event) => update({ startDate: event.target.value })}
           />
@@ -82,6 +84,7 @@ function EditBookForm({ book }) {
             <span className="field-label">{abandoned ? 'תאריך נטישה' : 'תאריך סיום'}</span>
             <input
               type="date"
+              max={todayISO()}
               value={form.endDate}
               onChange={(event) => update({ endDate: event.target.value })}
             />

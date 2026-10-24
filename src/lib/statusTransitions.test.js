@@ -102,6 +102,21 @@ describe('applyTransition', () => {
     expect(() => applyTransition({ status }, action, { today: TODAY })).toThrow(TransitionError);
   });
 
+  it.each([
+    [{ status: 'want' }, 'start'],
+    [reading, 'finish'],
+    [reading, 'abandon'],
+    [finished, 'reread'],
+  ])('rejects a future date for %j %s', (book, action) => {
+    expect(() => applyTransition(book, action, { today: TODAY, date: '2026-10-25' })).toThrow(
+      'התאריך לא יכול להיות בעתיד',
+    );
+  });
+
+  it('accepts today as an explicit date', () => {
+    expect(applyTransition(reading, 'finish', { today: TODAY, date: TODAY }).endDate).toBe(TODAY);
+  });
+
   it('rejects unknown actions', () => {
     expect(() => applyTransition(reading, 'explode')).toThrow(TransitionError);
   });
