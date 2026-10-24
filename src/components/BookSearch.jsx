@@ -1,25 +1,36 @@
 import { useEffect, useState } from 'react';
-import { searchBooks } from '../api/googleBooks';
+import { SEARCH_SOURCES, searchAllSources } from '../api/bookSearch';
 
-// Debounced Google Books search. Selecting a result calls `onSelect(result)`.
+const SOURCE_LABELS = {
+  [SEARCH_SOURCES.GOOGLE]: 'Google',
+  [SEARCH_SOURCES.NLI]: 'הספרייה הלאומית',
+};
+
+const FAILED_MESSAGES = {
+  [SEARCH_SOURCES.GOOGLE]: 'Google Books לא זמין כרגע.',
+  [SEARCH_SOURCES.NLI]: 'הספרייה הלאומית לא זמינה כרגע.',
+};
+
+// Debounced search in Google Books and the National Library of Israel.
+// Selecting a result calls `onSelect(result)`.
 export default function BookSearch({ onSelect, debounceMs = 400 }) {
   const [query, setQuery] = useState('');
-  const [state, setState] = useState({ status: 'idle', results: [] });
+  const [state, setState] = useState({ status: 'idle', results: [], failed: [] });
 
   useEffect(() => {
     const q = query.trim();
     if (q.length < 2) {
-      setState({ status: 'idle', results: [] });
+      setState({ status: 'idle', results: [], failed: [] });
       return undefined;
     }
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       setState((prev) => ({ ...prev, status: 'loading' }));
       try {
-        const results = await searchBooks(q, { signal: controller.signal });
-        setState({ status: results.length ? 'done' : 'empty', results });
+        const { results, failed } = await searchAllSources(q, { signal: controller.signal });
+        setState({ status: results.length ? 'done' : 'empty', results, failed });
       } catch (error) {
-        if (error?.name !== 'AbortError') setState({ status: 'error', results: [] });
+        if (error?.name !== 'AbortError') setState({ status: 'error', results: [], failed: [] });
       }
     }, debounceMs);
     return () => {
@@ -36,7 +47,7 @@ export default function BookSearch({ onSelect, debounceMs = 400 }) {
   return (
     <div className="book-search">
       <label className="field">
-        <span className="field-label">חיפוש ב‑Google Books</span>
+        <span className="field-label">חיפוש ספר</span>
         <input
           type="search"
           value={query}
@@ -53,11 +64,17 @@ export default function BookSearch({ onSelect, debounceMs = 400 }) {
           החיפוש נכשל. אפשר למלא ידנית.
         </p>
       )}
+      {state.status !== 'error' &&
+        state.failed.map((source) => (
+          <p key={source} className="muted search-note">
+            {FAILED_MESSAGES[source]}
+          </p>
+        ))}
 
       {state.results.length > 0 && (
         <ul className="search-results" aria-label="תוצאות חיפוש">
-          {state.results.map((result) => (
-            <li key={result.googleId ?? result.title}>
+          {state.results.map((result, index) => (
+            <li key={result.id ?? `${result.title}-${index}`}>
               <button type="button" className="search-result" onClick={() => select(result)}>
                 {result.thumbnailUrl ? (
                   <img src={result.thumbnailUrl} alt="" referrerPolicy="no-referrer" />
@@ -66,7 +83,18 @@ export default function BookSearch({ onSelect, debounceMs = 400 }) {
                 )}
                 <span className="search-result-text">
                   <span className="search-result-title">{result.title}</span>
-                  {result.author && <span className="muted">{result.author}</span>}
+                  {(result.author || result.year) && (
+                    <span className="muted">
+                      {[result.author, result.year].filter(Boolean).join(' · ')}
+                    </span>
+                  )}
+                  <span className="source-tags">
+                    {(result.sources ?? [result.source]).map((source) => (
+                      <span key={source} className="source-tag">
+                        {SOURCE_LABELS[source]}
+                      </span>
+                    ))}
+                  </span>
                 </span>
               </button>
             </li>

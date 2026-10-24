@@ -1,4 +1,5 @@
 import { todayISO } from './dates';
+import { cleanIsbn } from './isbn';
 import { FUTURE_DATE_MESSAGE, STATUS, isValidRating } from './statusTransitions';
 
 // How a new book is saved from the New Book screen.
@@ -27,6 +28,7 @@ export function normalizeBookInput(input) {
   if ('pages' in input) result.pages = parsePages(input.pages);
   if ('coverUrl' in input) result.coverUrl = input.coverUrl || null;
   if ('coverData' in input) result.coverData = input.coverData || null;
+  if ('isbn' in input) result.isbn = cleanIsbn(input.isbn);
   return result;
 }
 
@@ -44,6 +46,7 @@ export function createBook(input, mode, today = todayISO()) {
     pages: null,
     coverUrl: null,
     coverData: null,
+    isbn: null,
     summary: null,
     ...normalizeBookInput(input),
     status,
@@ -83,7 +86,7 @@ export function validateBook(book, today = todayISO()) {
   return errors;
 }
 
-// The cover to display: an uploaded cover wins over the Google Books link.
+// The cover to display: a saved (compressed) cover wins over the link it came from.
 export function coverSource(book) {
   return book?.coverData || book?.coverUrl || null;
 }

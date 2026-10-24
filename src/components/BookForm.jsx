@@ -4,7 +4,8 @@ import CoverPicker from './CoverPicker';
 
 // Controlled form for book details, shared by New Book and Edit Book.
 // `value` holds raw input values; `onChange(patch)` merges changes; `errors` maps field → message.
-export default function BookForm({ value, onChange, errors = {} }) {
+// `autoCover` ({ result }) asks the cover picker to find a cover for a chosen search result.
+export default function BookForm({ value, onChange, errors = {}, autoCover = null }) {
   const genresId = useId();
   const field = (name) => ({
     value: value[name] ?? '',
@@ -15,9 +16,11 @@ export default function BookForm({ value, onChange, errors = {} }) {
     <div className="book-form">
       <CoverPicker
         title={value.title}
+        author={value.author}
         coverUrl={value.coverUrl}
         coverData={value.coverData}
         onChange={onChange}
+        autoSource={autoCover}
       />
 
       <label className="field">

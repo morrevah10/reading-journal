@@ -1,0 +1,11 @@
+# Cloudflare Worker that bridges the reading journal to services it can't call from the browser.
+# Secrets (never in this file): NLI_API_KEY, TAVILY_API_KEY, COVER_SIGNING_KEY
+# — set with `npx wrangler secret put <NAME>`.
+# Locally they come from worker/.dev.vars (gitignored, see .dev.vars.example).
+name = "reading-journal-bridge"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+# Comma separated. ":*" allows any port.
+ALLOWED_ORIGINS = "https://morrevah10.github.io,http://localhost:*,http://127.0.0.1:*"

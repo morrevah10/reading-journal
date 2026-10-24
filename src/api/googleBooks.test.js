@@ -25,6 +25,8 @@ function okResponse(body) {
 describe('normalizeVolume', () => {
   it('maps a full volume', () => {
     expect(normalizeVolume(fullItem)).toEqual({
+      source: 'google',
+      id: 'google:abc123',
       googleId: 'abc123',
       title: 'Dune',
       author: 'Frank Herbert, Brian Herbert',
@@ -36,6 +38,8 @@ describe('normalizeVolume', () => {
 
   it('handles missing fields', () => {
     expect(normalizeVolume({ id: 'x', volumeInfo: { title: 'Only title' } })).toEqual({
+      source: 'google',
+      id: 'google:x',
       googleId: 'x',
       title: 'Only title',
       author: null,
@@ -96,8 +100,50 @@ describe('searchBooks', () => {
     );
   });
 
-  it('propagates network errors', async () => {
+  it('propagates network errors after one retry', async () => {
     const fetchImpl = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
-    await expect(searchBooks('dune', { fetchImpl, apiKey: 'KEY' })).rejects.toThrow(TypeError);
+    await expect(searchBooks('dune', { fetchImpl, apiKey: 'KEY', retryDelayMs: 0 })).rejects.toThrow(
+      TypeError,
+    );
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('retries once after a 503', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 503 })
+      .mockResolvedValueOnce(okResponse({ items: [fullItem] }));
+    const results = await searchBooks('dune', { fetchImpl, apiKey: 'KEY', retryDelayMs: 0 });
+    expect(results).toHaveLength(1);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('retries once after a network error', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce(okResponse({ items: [fullItem] }));
+    expect(await searchBooks('dune', { fetchImpl, apiKey: 'KEY', retryDelayMs: 0 })).toHaveLength(1);
+  });
+
+  it('gives up after the second 503', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: false, status: 503 });
+    await expect(
+      searchBooks('dune', { fetchImpl, apiKey: 'KEY', retryDelayMs: 0 }),
+    ).rejects.toMatchObject({ status: 503 });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not retry other errors or an aborted search', async () => {
+    const limited = vi.fn().mockResolvedValue({ ok: false, status: 429 });
+    await expect(searchBooks('dune', { fetchImpl: limited, apiKey: 'KEY' })).rejects.toBeInstanceOf(
+      GoogleBooksError,
+    );
+    expect(limited).toHaveBeenCalledTimes(1);
+
+    const abort = new DOMException('Aborted', 'AbortError');
+    const aborted = vi.fn().mockRejectedValue(abort);
+    await expect(searchBooks('dune', { fetchImpl: aborted, apiKey: 'KEY' })).rejects.toBe(abort);
+    expect(aborted).toHaveBeenCalledTimes(1);
   });
 });

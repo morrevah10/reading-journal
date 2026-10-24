@@ -1,0 +1,5 @@
+# Copy to worker/.dev.vars (gitignored) for `npm run dev` inside worker/.
+NLI_API_KEY=
+TAVILY_API_KEY=
+# Any long random string; signs image search URLs so /cover accepts them.
+COVER_SIGNING_KEY=

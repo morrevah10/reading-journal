@@ -5,6 +5,10 @@ coverage
 # Local secrets
 .env.local
 .env.*.local
+worker/.dev.vars
+
+# Cloudflare Worker local state
+.wrangler
 
 # Firebase emulator output
 firebase-debug.log

@@ -5,6 +5,7 @@ import { Route, Routes } from 'react-router-dom';
 import { renderWithAuth, testUser } from '../test/renderWithAuth';
 import { addBook } from '../firebase/books';
 import { searchBooks } from '../api/googleBooks';
+import { loadCoverData } from '../api/coverSources';
 import { todayISO } from '../lib/dates';
 import NewBook from './NewBook';
 
@@ -16,7 +17,17 @@ vi.mock('../api/googleBooks', () => ({
   searchBooks: vi.fn(),
 }));
 
+// Cover downloads never touch the network in tests.
+vi.mock('../api/coverSources', async (importOriginal) => ({
+  ...(await importOriginal()),
+  loadCoverData: vi.fn(),
+  editionCoverCandidates: vi.fn(async () => []),
+  webCoverCandidates: vi.fn(async () => []),
+}));
+
 const duneResult = {
+  source: 'google',
+  id: 'google:g1',
   googleId: 'g1',
   title: 'Dune',
   author: 'Frank Herbert',
@@ -37,9 +48,40 @@ function renderNewBook() {
 
 beforeEach(() => {
   searchBooks.mockResolvedValue([duneResult]);
+  loadCoverData.mockRejectedValue(new Error('no cover'));
 });
 
 describe('NewBook', () => {
+  it('saves the automatic cover and the ISBN of the chosen result', async () => {
+    loadCoverData.mockResolvedValue('data:image/webp;base64,AUTO');
+    renderNewBook();
+    await userEvent.type(screen.getByRole('searchbox'), 'dune');
+    await userEvent.click(await screen.findByRole('button', { name: /Dune/ }));
+    await vi.waitFor(() =>
+      expect(screen.getByRole('img', { name: 'כריכת Dune' })).toHaveAttribute(
+        'src',
+        'data:image/webp;base64,AUTO',
+      ),
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'לרשימת רוצה לקרוא' }));
+    expect(addBook).toHaveBeenCalledWith(
+      testUser.uid,
+      expect.objectContaining({
+        title: 'Dune',
+        isbn: '9780441013593',
+        coverData: 'data:image/webp;base64,AUTO',
+        coverUrl: 'https://books.google.com/dune.jpg',
+      }),
+    );
+  });
+
+  it('shows the source of each result', async () => {
+    renderNewBook();
+    await userEvent.type(screen.getByRole('searchbox'), 'dune');
+    const result = await screen.findByRole('button', { name: /Dune/ });
+    expect(within(result).getByText('Google')).toBeInTheDocument();
+  });
+
   it('shows Google Books results and fills the form on select', async () => {
     renderNewBook();
     await userEvent.type(screen.getByRole('searchbox'), 'dune');
