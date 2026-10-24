@@ -722,6 +722,94 @@ button.icon-button {
   padding: 0 var(--space-2);
 }
 
+/* Goals */
+.default-goals,
+.goal-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.goal-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.goal-card.achieved {
+  border-color: #b9d8bb;
+}
+
+.goal-achieved {
+  background: #e3efe3;
+  color: #2e6b34;
+}
+
+.goal-progress-label {
+  margin: 0 0 var(--space-2);
+  font-weight: 500;
+}
+
+.progress {
+  height: 10px;
+  border-radius: 999px;
+  background: #efe6da;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+  transition: width 0.3s ease;
+}
+
+.goal-card.achieved .progress-fill {
+  background: #3f8f47;
+}
+
+.goal-meta {
+  margin: var(--space-2) 0 0;
+  font-size: 0.85rem;
+}
+
+.goal-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  margin-top: var(--space-2);
+}
+
+.goal-setup .field {
+  margin-bottom: var(--space-2);
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.checkbox-field input {
+  width: auto;
+  min-height: auto;
+}
+
+@media (min-width: 600px) {
+  .default-goals,
+  .goal-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* Dialog */
 .dialog-overlay {
   position: fixed;

@@ -43,29 +43,32 @@ const ownerPaths = [
   `users/${OWNER}/goals/g1`,
 ];
 
+// Top-level collections under users/{uid}; every access check runs against each of them.
+const COLLECTIONS = ['books', 'goals'];
+
 describe('Firestore rules', () => {
-  it('blocks unauthenticated reads and writes', async () => {
+  it.each(COLLECTIONS)('blocks unauthenticated reads and writes on %s', async (name) => {
     const db = testEnv.unauthenticatedContext().firestore();
-    await assertFails(getDoc(doc(db, `users/${OWNER}/books/b1`)));
-    await assertFails(setDoc(doc(db, `users/${OWNER}/books/b1`), { title: 'x' }));
+    await assertFails(getDoc(doc(db, `users/${OWNER}/${name}/x1`)));
+    await assertFails(setDoc(doc(db, `users/${OWNER}/${name}/x1`), { title: 'x' }));
+  });
+
+  it.each(COLLECTIONS)('blocks another signed-in user from the owner\'s %s', async (name) => {
+    const db = testEnv.authenticatedContext(INTRUDER).firestore();
+    await assertFails(getDoc(doc(db, `users/${OWNER}/${name}/x1`)));
+    await assertFails(setDoc(doc(db, `users/${OWNER}/${name}/x1`), { title: 'x' }));
+  });
+
+  it.each(COLLECTIONS)('blocks the owner from another user\'s %s', async (name) => {
+    const db = testEnv.authenticatedContext(OWNER).firestore();
+    await assertFails(getDoc(doc(db, `users/${INTRUDER}/${name}/x1`)));
+    await assertFails(setDoc(doc(db, `users/${INTRUDER}/${name}/x1`), { title: 'x' }));
   });
 
   it.each(ownerPaths)('lets the owner read and write %s', async (path) => {
     const db = testEnv.authenticatedContext(OWNER).firestore();
     await assertSucceeds(setDoc(doc(db, path), { text: 'x' }));
     await assertSucceeds(getDoc(doc(db, path)));
-  });
-
-  it('blocks the owner from another user\'s data', async () => {
-    const db = testEnv.authenticatedContext(OWNER).firestore();
-    await assertFails(getDoc(doc(db, `users/${INTRUDER}/books/b1`)));
-    await assertFails(setDoc(doc(db, `users/${INTRUDER}/books/b1`), { title: 'x' }));
-  });
-
-  it('blocks another signed-in user from the owner\'s data', async () => {
-    const db = testEnv.authenticatedContext(INTRUDER).firestore();
-    await assertFails(getDoc(doc(db, `users/${OWNER}/books/b1`)));
-    await assertFails(setDoc(doc(db, `users/${OWNER}/books/b1`), { title: 'x' }));
   });
 
   it('blocks another signed-in user even under their own uid', async () => {
