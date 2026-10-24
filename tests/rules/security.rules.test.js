@@ -41,10 +41,11 @@ const ownerPaths = [
   `users/${OWNER}/books/b1/notes/n1`,
   `users/${OWNER}/books/b1/quotes/q1`,
   `users/${OWNER}/goals/g1`,
+  `users/${OWNER}/settings/genres`,
 ];
 
 // Top-level collections under users/{uid}; every access check runs against each of them.
-const COLLECTIONS = ['books', 'goals'];
+const COLLECTIONS = ['books', 'goals', 'settings'];
 
 describe('Firestore rules', () => {
   it.each(COLLECTIONS)('blocks unauthenticated reads and writes on %s', async (name) => {

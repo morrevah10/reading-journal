@@ -4,7 +4,8 @@ import { useBooks } from '../hooks/useBooks';
 import { useGoalRenewals, useGoals } from '../hooks/useGoals';
 import { deleteGoal, saveNewGoal, updateGoal } from '../firebase/goals';
 import { todayISO } from '../lib/dates';
-import { DEFAULT_GENRES } from '../lib/genres';
+import { useGenres } from '../hooks/useGenres';
+import { genreSuggestions } from '../lib/genres';
 import {
   DEFAULT_GOAL_NAMES,
   DEFAULT_SERIES,
@@ -15,7 +16,6 @@ import {
   seriesToStop,
   validateGoal,
 } from '../lib/goals';
-import { shelfGenres } from '../lib/shelf';
 import { ConfirmDialog } from '../components/Dialog';
 import DefaultGoalSetup from '../components/DefaultGoalSetup';
 import GoalCard from '../components/GoalCard';
@@ -37,10 +37,8 @@ export default function Goals() {
 
   const today = todayISO();
   const groups = useMemo(() => groupGoals(goals, today), [goals, today]);
-  const genres = useMemo(
-    () => [...new Set([...DEFAULT_GENRES, ...shelfGenres(books)])],
-    [books],
-  );
+  const genreList = useGenres().list;
+  const genres = useMemo(() => genreSuggestions(genreList, books), [genreList, books]);
 
   // { goal: null } creates a new goal; { goal } edits it.
   const [form, setForm] = useState(null);
