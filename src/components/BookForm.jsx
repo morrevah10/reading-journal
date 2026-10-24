@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { DEFAULT_GENRES } from '../lib/genres';
+import { useGenres } from '../hooks/useGenres';
 import CoverPicker from './CoverPicker';
 
 // Controlled form for book details, shared by New Book and Edit Book.
@@ -7,6 +7,7 @@ import CoverPicker from './CoverPicker';
 // `autoCover` ({ result }) asks the cover picker to find a cover for a chosen search result.
 export default function BookForm({ value, onChange, errors = {}, autoCover = null }) {
   const genresId = useId();
+  const { list: genres } = useGenres();
   const field = (name) => ({
     value: value[name] ?? '',
     onChange: (event) => onChange({ [name]: event.target.value }),
@@ -44,7 +45,7 @@ export default function BookForm({ value, onChange, errors = {}, autoCover = nul
           <span className="field-label">ז'אנר</span>
           <input type="text" list={genresId} {...field('genre')} autoComplete="off" />
           <datalist id={genresId}>
-            {DEFAULT_GENRES.map((genre) => (
+            {genres.map((genre) => (
               <option key={genre} value={genre} />
             ))}
           </datalist>

@@ -17,6 +17,13 @@ vi.mock('../firebase/books', () => ({
   updateBook: vi.fn(async () => {}),
 }));
 
+vi.mock('../firebase/goals', () => ({
+  subscribeGoals: vi.fn((uid, onData) => {
+    onData([]);
+    return () => {};
+  }),
+}));
+
 vi.mock('../api/coverSources', async (importOriginal) => ({
   ...(await importOriginal()),
   loadCoverData: vi.fn(),
@@ -76,6 +83,13 @@ describe('Settings', () => {
     expect(screen.getByText(testUser.displayName)).toBeInTheDocument();
     expect(screen.getByText(testUser.email)).toBeInTheDocument();
     expect(screen.getByText(testUser.uid)).toBeInTheDocument();
+  });
+
+  it('has the genres, covers and export cards', () => {
+    renderWithAuth(<Settings />);
+    for (const name of ["ז'אנרים", 'כריכות', 'ייצוא נתונים']) {
+      expect(screen.getByRole('heading', { name })).toBeInTheDocument();
+    }
   });
 
   it('calls signOutUser when sign-out is clicked', async () => {

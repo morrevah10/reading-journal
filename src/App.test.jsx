@@ -10,6 +10,13 @@ vi.mock('./firebase/books', () => ({
   }),
 }));
 
+vi.mock('./firebase/goals', () => ({
+  subscribeGoals: vi.fn((uid, onData) => {
+    onData([]);
+    return () => {};
+  }),
+}));
+
 vi.mock('./firebase/entries', () => ({
   ENTRY_KINDS: { NOTES: 'notes', QUOTES: 'quotes' },
 }));

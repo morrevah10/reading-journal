@@ -12,6 +12,16 @@ vi.mock('../firebase/auth', () => ({
   onAuthChange: vi.fn(() => () => {}),
 }));
 
+// The genre list was never saved, so the default list is used. Settings tests mock their own.
+vi.mock('../firebase/settings', () => ({
+  subscribeGenres: vi.fn((uid, onData) => {
+    onData(null);
+    return () => {};
+  }),
+  saveGenres: vi.fn(async () => {}),
+  genresDoc: vi.fn((uid) => ({ path: `users/${uid}/settings/genres` })),
+}));
+
 // Recharts' ResponsiveContainer needs ResizeObserver, which jsdom doesn't provide.
 if (!globalThis.ResizeObserver) {
   globalThis.ResizeObserver = class {

@@ -1,6 +1,8 @@
 import { useAuth } from '../hooks/useAuth';
 import { signOutUser } from '../firebase/auth';
 import CoverBackfill from '../components/CoverBackfill';
+import ExportData from '../components/ExportData';
+import GenreManager from '../components/GenreManager';
 
 export default function Settings() {
   const { user } = useAuth();
@@ -19,7 +21,9 @@ export default function Settings() {
           התנתקות
         </button>
       </div>
+      <GenreManager />
       <CoverBackfill />
+      <ExportData />
     </section>
   );
 }

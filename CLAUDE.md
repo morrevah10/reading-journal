@@ -39,7 +39,9 @@ src/
   lib/            # pure business logic: reading days, status transitions, goal progress, stats
   components/     # shared UI components
   screens/        # Shelf, NewBook, BookPage, WantToRead, Goals, Stats, Settings
-  hooks/          # data hooks (useBooks, useBook, useGoals)
+  hooks/          # data hooks (useBooks, useBook, useGoals, useGenres)
+  platform/       # browser helpers (sharing or downloading a file)
+  pwa/            # manifest and service worker config
   test/           # test setup and shared test utilities
 worker/           # Cloudflare Worker (own package.json; its tests run with the root `npm test`)
 firestore.rules
@@ -51,6 +53,7 @@ firestore.rules
 - `users/{uid}/books/{bookId}/notes/{noteId}` — text, createdAt
 - `users/{uid}/books/{bookId}/quotes/{quoteId}` — text, page, createdAt
 - `users/{uid}/goals/{goalId}` — name, type (books | pages | genre), target, genre, period (monthly | yearly | custom), startDate, endDate, recurring, seriesId. Each period of a recurring goal is its own document with id `{seriesId}__{periodKey}`.
+- `users/{uid}/settings/genres` — list (the genre suggestions, sorted; `DEFAULT_GENRES` until first saved), updatedAt. Books and goals store the genre name itself, so a rename can update them too (`src/firebase/genreUpdates.js`).
 
 Notes and quotes are unlimited; the book page scrolls. Goals are always editable.
 
