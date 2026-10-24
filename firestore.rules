@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Single-user app: only Mor's account may access data.
+    // Mor's uid (shown in Settings).
+    function ownerUid() {
+      return 'zjTbYzaUlUguWRoVBvmwgpSrn0P2';
+    }
+
+    function isOwner(uid) {
+      return request.auth != null
+        && request.auth.uid == uid
+        && uid == ownerUid();
+    }
+
+    // Covers books, notes, quotes, goals and any future subcollection.
+    match /users/{uid}/{document=**} {
+      allow read, write: if isOwner(uid);
+    }
+  }
+}
