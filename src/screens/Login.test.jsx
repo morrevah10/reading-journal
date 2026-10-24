@@ -1,12 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { signInWithGoogle } from '../firebase/auth';
 import Login from './Login';
-
-vi.mock('../firebase/auth', () => ({
-  signInWithGoogle: vi.fn(),
-}));
 
 describe('Login', () => {
   it('calls signInWithGoogle when the button is clicked', async () => {

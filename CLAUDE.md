@@ -22,7 +22,7 @@ The full functional spec is in `SPEC.md`. Read it before doing anything.
 
 - React + Vite (JavaScript), React Router
 - Firebase: Auth (Google sign-in), Firestore (realtime via `onSnapshot`). The Firestore database is named `default` (not `(default)`); see `src/firebase/config.js` and `firebase.json`.
-- **No Firebase Storage** (it requires the Blaze plan). Every cover — from Google Books or a manual upload — is compressed client-side (canvas, JPEG/WebP, ~40KB max) and stored as a data URL in the book's `coverData` field.
+- **No Firebase Storage** (it requires the Blaze plan). Covers: a Google Books cover is stored as a link in `coverUrl` (display only — Google's images have no CORS headers, so they can't be compressed in the browser). A manual upload is compressed client-side (canvas, WebP/JPEG, ~40KB max) and stored as a data URL in `coverData`. `coverData` wins when both exist. Persisting Google covers too (via a Cloudflare Worker CORS relay) is deferred to stage 7.
 - Google Books API for cover, author and page count lookup
 - Recharts for statistics
 - Vitest + React Testing Library; `@firebase/rules-unit-testing` with the emulator for security rules
@@ -34,6 +34,7 @@ The full functional spec is in `SPEC.md`. Read it before doing anything.
 ```
 src/
   firebase/       # app init, auth helpers, Firestore access
+  api/            # external APIs (Google Books)
   lib/            # pure business logic: reading days, status transitions, goal progress, stats
   components/     # shared UI components
   screens/        # Shelf, NewBook, BookPage, WantToRead, Goals, Stats, Settings
@@ -44,7 +45,7 @@ firestore.rules
 
 ## Data model (summary — see SPEC.md for full details)
 
-- `users/{uid}/books/{bookId}` — title, author, genre, pages, coverData, status (want | reading | finished | abandoned), startDate, endDate, summary, rating, review, abandonReason, tags, createdAt, updatedAt
+- `users/{uid}/books/{bookId}` — title, author, genre, pages, coverUrl, coverData, status (want | reading | finished | abandoned), startDate, endDate, summary, rating, review, abandonReason, tags, createdAt, updatedAt
 - `users/{uid}/books/{bookId}/notes/{noteId}` — text, createdAt
 - `users/{uid}/books/{bookId}/quotes/{quoteId}` — text, page, createdAt
 - `users/{uid}/goals/{goalId}` — name, type (books | pages | genre), target, genre, period (monthly | yearly | custom), startDate, endDate, recurring
