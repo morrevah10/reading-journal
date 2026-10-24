@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Full-bleed background so the same source works as a maskable icon. -->
+  <rect width="512" height="512" fill="#5b4636"/>
+  <!-- Open book; kept inside the maskable safe zone (radius 205 around the center). -->
+  <g transform="translate(256 256) scale(1.15) translate(-256 -271)">
+  <path d="M256 200 C 218 178 168 172 118 180 L 118 342 C 168 334 218 340 256 362 Z" fill="#faf7f2"/>
+  <path d="M256 200 C 294 178 344 172 394 180 L 394 342 C 344 334 294 340 256 362 Z" fill="#f0e8dc"/>
+  <path d="M256 200 L 256 362" stroke="#5b4636" stroke-width="4" stroke-linecap="round"/>
+  <!-- Text lines -->
+  <g fill="none" stroke="#c3b5a5" stroke-width="7" stroke-linecap="round">
+    <path d="M146 220 C 176 214 206 216 232 226"/>
+    <path d="M146 250 C 176 244 206 246 232 256"/>
+    <path d="M146 280 C 176 274 206 276 232 286"/>
+    <path d="M174 307 C 194 306 214 309 232 316"/>
+    <path d="M280 226 C 296 220 312 217 326 216"/>
+    <path d="M280 256 C 306 246 336 244 366 250"/>
+    <path d="M280 286 C 306 276 336 274 366 280"/>
+  </g>
+  <!-- Bookmark ribbon -->
+  <path d="M344 176 L 376 176 L 376 252 L 360 238 L 344 252 Z" fill="#c9a27e"/>
+  </g>
+</svg>

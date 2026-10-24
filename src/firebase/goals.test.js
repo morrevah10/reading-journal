@@ -1,14 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
-import { addDoc, setDoc, writeBatch } from 'firebase/firestore';
+import { setDoc, writeBatch } from 'firebase/firestore';
 import { deleteGoal, saveNewGoal } from './goals';
 
 vi.mock('./config', () => ({ db: {} }));
 
 vi.mock('firebase/firestore', () => ({
   collection: vi.fn((db, ...segments) => ({ path: segments.join('/') })),
-  doc: vi.fn((parent, id) => ({ path: `${parent.path}/${id}` })),
-  addDoc: vi.fn(() => Promise.resolve({ id: 'auto-id' })),
-  setDoc: vi.fn(() => Promise.resolve()),
+  // doc(collection) without an id generates one locally.
+  doc: vi.fn((parent, id = 'auto-id') => ({ path: `${parent.path}/${id}`, id })),
+  // Never settles, like a write while offline.
+  setDoc: vi.fn(() => new Promise(() => {})),
   updateDoc: vi.fn(),
   onSnapshot: vi.fn(),
   serverTimestamp: vi.fn(() => 'ts'),
@@ -27,9 +28,9 @@ describe('saveNewGoal', () => {
     expect(setDoc.mock.calls[0][0].path).toBe('users/u1/goals/monthly-books__2026-10');
   });
 
-  it('uses an automatic id for other goals', async () => {
+  it('uses an automatic local id for other goals, without waiting for the server', async () => {
     expect(await saveNewGoal('u1', { recurring: false, period: 'custom' })).toBe('auto-id');
-    expect(addDoc).toHaveBeenCalled();
+    expect(setDoc.mock.calls.at(-1)[0].path).toBe('users/u1/goals/auto-id');
   });
 });
 
@@ -40,9 +41,12 @@ describe('deleteGoal', () => {
 
     await deleteGoal('u1', 'monthly-books__2026-10', ['monthly-books__2026-09']);
 
-    expect(batch.delete).toHaveBeenCalledWith({ path: 'users/u1/goals/monthly-books__2026-10' });
+    expect(batch.delete).toHaveBeenCalledWith({
+      path: 'users/u1/goals/monthly-books__2026-10',
+      id: 'monthly-books__2026-10',
+    });
     expect(batch.update).toHaveBeenCalledWith(
-      { path: 'users/u1/goals/monthly-books__2026-09' },
+      { path: 'users/u1/goals/monthly-books__2026-09', id: 'monthly-books__2026-09' },
       expect.objectContaining({ recurring: false }),
     );
     expect(batch.commit).toHaveBeenCalledTimes(1);

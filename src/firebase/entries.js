@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -7,9 +6,11 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
 } from 'firebase/firestore';
 import { db } from './config';
+import { localWrite } from './localWrite';
 
 // Notes and quotes share the same shape and access pattern: users/{uid}/books/{bookId}/{kind}.
 export const ENTRY_KINDS = {
@@ -33,18 +34,17 @@ export function subscribeEntries(uid, bookId, kind, onData, onError) {
   );
 }
 
+// Writes resolve once they are in the local cache (see localWrite), so they also work offline.
 export async function addEntry(uid, bookId, kind, data) {
-  const ref = await addDoc(entriesCollection(uid, bookId, kind), {
-    ...data,
-    createdAt: serverTimestamp(),
-  });
+  const ref = doc(entriesCollection(uid, bookId, kind));
+  localWrite(setDoc(ref, { ...data, createdAt: serverTimestamp() }));
   return ref.id;
 }
 
-export function updateEntry(uid, bookId, kind, entryId, patch) {
-  return updateDoc(doc(entriesCollection(uid, bookId, kind), entryId), patch);
+export async function updateEntry(uid, bookId, kind, entryId, patch) {
+  localWrite(updateDoc(doc(entriesCollection(uid, bookId, kind), entryId), patch));
 }
 
-export function deleteEntry(uid, bookId, kind, entryId) {
-  return deleteDoc(doc(entriesCollection(uid, bookId, kind), entryId));
+export async function deleteEntry(uid, bookId, kind, entryId) {
+  localWrite(deleteDoc(doc(entriesCollection(uid, bookId, kind), entryId)));
 }

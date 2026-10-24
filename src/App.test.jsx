@@ -38,6 +38,8 @@ describe('App auth gate', () => {
   });
 
   it('loads the lazy stats screen', async () => {
+    // Warm the module first: the first transform of Recharts can exceed findBy's wait under load.
+    await import('./screens/Stats');
     renderWithAuth(<App />, { route: '/stats' });
     expect(await screen.findByRole('heading', { name: 'סטטיסטיקות' })).toBeInTheDocument();
   });

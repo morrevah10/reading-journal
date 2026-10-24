@@ -1,10 +1,20 @@
-import { defineConfig } from 'vite';
+﻿import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
+import { BASE_PATH, manifest } from './src/pwa/manifest.js';
+import { workbox } from './src/pwa/workbox.js';
 
-// The app is served from https://<user>.github.io/reading-journal/ on GitHub Pages.
 export default defineConfig({
-  base: '/reading-journal/',
-  plugins: [react()],
+  base: BASE_PATH,
+  plugins: [
+    react(),
+    VitePWA({
+      // A new version waits until the user taps "refresh" (see UpdatePrompt).
+      registerType: 'prompt',
+      manifest,
+      workbox,
+    }),
+  ],
   test: {
     environment: 'jsdom',
     globals: true,
