@@ -10,9 +10,6 @@ import BookPage from './BookPage';
 
 const fixtures = vi.hoisted(() => ({ book: null, notes: [], quotes: [] }));
 
-// Keeps the real Firebase app from initializing (CI has no .env.local).
-vi.mock('../firebase/config', () => ({ app: {}, auth: {}, db: {} }));
-
 vi.mock('../firebase/books', () => ({
   subscribeBook: vi.fn((uid, id, onData) => {
     onData(fixtures.book);

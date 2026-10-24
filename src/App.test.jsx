@@ -3,12 +3,6 @@ import { screen } from '@testing-library/react';
 import { renderWithAuth } from './test/renderWithAuth';
 import App from './App';
 
-vi.mock('./firebase/auth', () => ({
-  signInWithGoogle: vi.fn(),
-  signOutUser: vi.fn(),
-  onAuthChange: vi.fn(() => () => {}),
-}));
-
 vi.mock('./firebase/books', () => ({
   subscribeBooks: vi.fn((uid, onData) => {
     onData([]);

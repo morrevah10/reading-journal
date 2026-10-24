@@ -8,9 +8,6 @@ import { searchBooks } from '../api/googleBooks';
 import { todayISO } from '../lib/dates';
 import NewBook from './NewBook';
 
-// Keeps the real Firebase app from initializing (CI has no .env.local).
-vi.mock('../firebase/config', () => ({ app: {}, auth: {}, db: {} }));
-
 vi.mock('../firebase/books', () => ({
   addBook: vi.fn(() => Promise.resolve('new-book-id')),
 }));
