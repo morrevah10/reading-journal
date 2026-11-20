@@ -116,16 +116,16 @@ export function periodTitle(range) {
   return STATS_MODE_LABELS.all;
 }
 
-// Paging limits: from the earliest finished or abandoned book up to today,
-// so the arrows never reach an empty past or the future.
+// Paging limits: back at least two years (further if there are older books),
+// forward only up to today, so the arrows never reach the future.
 export function anchorBounds(mode, books, today) {
   const dates = books
     .filter((book) => (book.status === STATUS.FINISHED || book.status === STATUS.ABANDONED) && book.endDate)
     .map((book) => book.endDate);
-  const earliest = dates.length ? dates.reduce((min, d) => (d < min ? d : min)) : today;
-  const first = anchorFor(mode, earliest < today ? earliest : today);
-  const last = anchorFor(mode, today);
-  return { first, last };
+  const earliestBook = dates.length ? dates.reduce((min, d) => (d < min ? d : min)) : today;
+  const twoYearsAgo = `${Number(today.slice(0, 4)) - 2}-01-01`;
+  const earliest = earliestBook < twoYearsAgo ? earliestBook : twoYearsAgo;
+  return { first: anchorFor(mode, earliest), last: anchorFor(mode, today) };
 }
 
 // Books per week of a month: weeks are 1–7, 8–14, 15–21, 22–28 and 29–end.

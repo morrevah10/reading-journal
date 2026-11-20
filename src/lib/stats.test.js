@@ -59,16 +59,18 @@ describe('periods', () => {
     expect(periodTitle(periodRange(STATS_MODES.ALL))).toBe('הכל');
   });
 
-  it('bounds paging between the earliest finished or abandoned book and today', () => {
+  it('bounds paging: at least two years back, further for older books, never past today', () => {
     const books = [
       finished('a', '2024-03-10'),
-      { id: 'ab', status: 'abandoned', endDate: '2023-07-01' },
+      { id: 'ab', status: 'abandoned', endDate: '2021-07-01' },
       { id: 'w', status: 'want' },
       { id: 'r', status: 'reading', startDate: '2020-01-01' },
     ];
-    expect(anchorBounds(STATS_MODES.MONTH, books, TODAY)).toEqual({ first: '2023-07', last: '2026-10' });
-    expect(anchorBounds(STATS_MODES.YEAR, books, TODAY)).toEqual({ first: '2023', last: '2026' });
-    expect(anchorBounds(STATS_MODES.YEAR, [], TODAY)).toEqual({ first: '2026', last: '2026' });
+    expect(anchorBounds(STATS_MODES.MONTH, books, TODAY)).toEqual({ first: '2021-07', last: '2026-10' });
+    expect(anchorBounds(STATS_MODES.YEAR, books, TODAY)).toEqual({ first: '2021', last: '2026' });
+    // No old books: still two full years back.
+    expect(anchorBounds(STATS_MODES.YEAR, [], TODAY)).toEqual({ first: '2024', last: '2026' });
+    expect(anchorBounds(STATS_MODES.MONTH, [finished('f', '2026-10-01')], TODAY)).toEqual({ first: '2024-01', last: '2026-10' });
     // A book finished "in the future" never pushes the last anchor past today.
     expect(anchorBounds(STATS_MODES.MONTH, [finished('f', '2027-01-05')], TODAY).last).toBe('2026-10');
   });
