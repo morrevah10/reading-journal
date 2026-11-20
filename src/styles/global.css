@@ -1185,3 +1185,51 @@ button.icon-button {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
 }
+
+/* Statistics: period paging */
+.period-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.period-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  flex: 1;
+}
+
+.period-arrow {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.period-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Settings: collapsed technical details */
+.tech-details {
+  margin: var(--space-2) 0;
+}
+
+.tech-details summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.tech-details p {
+  margin-top: var(--space-2);
+}
