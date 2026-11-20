@@ -58,7 +58,7 @@ describe('Stats', () => {
     expect(within(tile('ספרים שנטשתי')).getByText('1')).toBeInTheDocument();
   });
 
-  it('pages between years and stops at the first year with books and at today', async () => {
+  it('pages between years, back past empty years, and stops at today', async () => {
     renderStats();
     const back = screen.getByRole('button', { name: 'השנה הקודמת' });
     const forward = screen.getByRole('button', { name: 'השנה הבאה' });
@@ -67,9 +67,14 @@ describe('Stats', () => {
     expect(screen.getByRole('heading', { name: '2025' })).toBeInTheDocument();
     expect(within(tile('ספרים שסיימתי')).getByText('1')).toBeInTheDocument();
     expect(within(tile('ספרים שנטשתי')).getByText('0')).toBeInTheDocument();
+    await userEvent.click(back);
+    expect(screen.getByRole('heading', { name: '2024' })).toBeInTheDocument();
+    expect(screen.getByText('אין ספרים שסיימת בטווח הזה.')).toBeInTheDocument();
     expect(back).toBeDisabled();
     await userEvent.click(forward);
+    await userEvent.click(forward);
     expect(screen.getByRole('heading', { name: '2026' })).toBeInTheDocument();
+    expect(forward).toBeDisabled();
   });
 
   it('shows a month with books per week and pages between months', async () => {
