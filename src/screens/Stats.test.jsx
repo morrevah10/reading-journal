@@ -46,9 +46,10 @@ afterEach(() => {
 });
 
 describe('Stats', () => {
-  it('shows this year\'s key numbers by default', () => {
+  it('opens on the current year with its key numbers', () => {
     renderStats();
-    expect(screen.getByRole('button', { name: 'השנה' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'שנה' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('heading', { name: '2026' })).toBeInTheDocument();
     expect(within(tile('ספרים שסיימתי')).getByText('3')).toBeInTheDocument();
     expect(within(tile('עמודים')).getByText('700')).toBeInTheDocument();
     expect(within(tile('עמודים')).getByText('1 ספרים בלי מספר עמודים')).toBeInTheDocument();
@@ -57,15 +58,52 @@ describe('Stats', () => {
     expect(within(tile('ספרים שנטשתי')).getByText('1')).toBeInTheDocument();
   });
 
-  it('switches to last year and to all', async () => {
+  it('pages between years and stops at the first year with books and at today', async () => {
     renderStats();
-    await userEvent.click(screen.getByRole('button', { name: 'שנה שעברה' }));
+    const back = screen.getByRole('button', { name: 'השנה הקודמת' });
+    const forward = screen.getByRole('button', { name: 'השנה הבאה' });
+    expect(forward).toBeDisabled();
+    await userEvent.click(back);
+    expect(screen.getByRole('heading', { name: '2025' })).toBeInTheDocument();
     expect(within(tile('ספרים שסיימתי')).getByText('1')).toBeInTheDocument();
     expect(within(tile('ספרים שנטשתי')).getByText('0')).toBeInTheDocument();
+    expect(back).toBeDisabled();
+    await userEvent.click(forward);
+    expect(screen.getByRole('heading', { name: '2026' })).toBeInTheDocument();
+  });
 
+  it('shows a month with books per week and pages between months', async () => {
+    renderStats();
+    await userEvent.click(screen.getByRole('button', { name: 'חודש' }));
+    expect(screen.getByRole('heading', { name: 'אוקטובר 2026' })).toBeInTheDocument();
+    expect(within(tile('ספרים שסיימתי')).getByText('2')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'החודש הבא' })).toBeDisabled();
+
+    const section = screen.getByRole('region', { name: 'ספרים לשבוע · אוקטובר 2026' });
+    await userEvent.click(within(section).getByRole('button', { name: 'הצג כטבלה' }));
+    expect(within(section).getByRole('row', { name: '15–21 1' })).toBeInTheDocument();
+    expect(within(section).getByRole('row', { name: '22–28 1' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'החודש הקודם' }));
+    expect(screen.getByRole('heading', { name: 'ספטמבר 2026' })).toBeInTheDocument();
+    expect(screen.getByText('אין ספרים שסיימת בטווח הזה.')).toBeInTheDocument();
+  });
+
+  it('keeps each mode\'s place when switching modes', async () => {
+    renderStats();
+    await userEvent.click(screen.getByRole('button', { name: 'השנה הקודמת' }));
+    await userEvent.click(screen.getByRole('button', { name: 'חודש' }));
+    expect(screen.getByRole('heading', { name: 'אוקטובר 2026' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'שנה' }));
+    expect(screen.getByRole('heading', { name: '2025' })).toBeInTheDocument();
+  });
+
+  it('shows everything for "all", without paging', async () => {
+    renderStats();
     await userEvent.click(screen.getByRole('button', { name: 'הכל' }));
     expect(within(tile('ספרים שסיימתי')).getByText('4')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'ספרים לשנה' })).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'תקופה' })).not.toBeInTheDocument();
   });
 
   it('shows books per month as a table', async () => {

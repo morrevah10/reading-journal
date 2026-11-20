@@ -78,10 +78,14 @@ describe('Settings — save all covers', () => {
 });
 
 describe('Settings', () => {
-  it('shows the signed-in account details including the uid', () => {
+  it('shows the account details and tucks the uid behind "פרטים טכניים"', async () => {
     renderWithAuth(<Settings />);
     expect(screen.getByText(testUser.displayName)).toBeInTheDocument();
     expect(screen.getByText(testUser.email)).toBeInTheDocument();
+    const details = screen.getByText('פרטים טכניים').closest('details');
+    expect(details).not.toHaveAttribute('open');
+    await userEvent.click(screen.getByText('פרטים טכניים'));
+    expect(details).toHaveAttribute('open');
     expect(screen.getByText(testUser.uid)).toBeInTheDocument();
   });
 
